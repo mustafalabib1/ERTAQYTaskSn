@@ -4,33 +4,40 @@
     ViewData["Title"] = "Product Details";
 }
 
-<div class="container">
-    <h1>Product Details</h1>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0"><i class="bi bi-box-seam"></i> Product Details</h3>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+                    }
 
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
-    }
+                    <dl class="row">
+                        <dt class="col-sm-3">Product Name</dt>
+                        <dd class="col-sm-9">@Model.Name</dd>
 
-    <div>
-        <dl class="row">
-            <dt class="col-sm-3">Product Name</dt>
-            <dd class="col-sm-9">@Model.Name</dd>
+                        <dt class="col-sm-3">Price</dt>
+                        <dd class="col-sm-9">@Model.Price.ToString("C")</dd>
 
-            <dt class="col-sm-3">Price</dt>
-            <dd class="col-sm-9">@Model.Price.ToString("C")</dd>
+                        <dt class="col-sm-3">Creation Date</dt>
+                        <dd class="col-sm-9">@Model.CreationDate.ToString("yyyy-MM-dd")</dd>
 
-            <dt class="col-sm-3">Creation Date</dt>
-            <dd class="col-sm-9">@Model.CreationDate.ToString("yyyy-MM-dd")</dd>
+                        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.ServiceProviderName)</dt>
+                        <dd class="col-sm-9">@(Model.ServiceProviderName ?? "N/A")</dd>
+                    </dl>
 
-            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.ServiceProviderName)</dt>
-            <dd class="col-sm-9">@(Model.ServiceProviderName ?? "N/A")</dd>
-        </dl>
-    </div>
-
-    <div>
-        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
-        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">Delete</a>
-        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                    <div class="mt-4 d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning"><i class="bi bi-pencil"></i> Edit</a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger"><i class="bi bi-trash"></i> Delete</a>
+                        <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left-circle"></i> Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

@@ -32,13 +32,9 @@
 
                     <form asp-action="Delete">
                         <input type="hidden" asp-for="Id" />
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
-                            <button type="submit" class="btn btn-danger">
-                                <i class="bi bi-trash"></i> Delete
-                            </button>
-                            <a asp-action="Index" class="btn btn-secondary">
-                                <i class="bi bi-x-circle"></i> Cancel
-                            </a>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-x-circle"></i> Cancel</a>
+                            <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Delete</button>
                         </div>
                     </form>
                 </div>

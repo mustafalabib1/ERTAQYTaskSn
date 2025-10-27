@@ -1,27 +1,7 @@
-﻿@model IEnumerable<GetAllProductViewModel>
+@model IEnumerable<GetAllProductViewModel>
 
-@{
-    ViewData["Title"] = "Products";
-}
-
-<div class="container">
-    <h1>Products</h1>
-
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
-    }
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
-    }
-
-    <p>
-        <a asp-action="Create" class="btn btn-primary">Create New</a>
-        <a asp-action="Filter" class="btn btn-outline-info">Filter Products</a>
-        <a asp-action="Search" class="btn btn-outline-secondary">Search by Price</a>
-    </p>
-
+@if (Model.Any())
+{
     <div class="row">
         @foreach (var item in Model)
         {
@@ -44,4 +24,10 @@
             </div>
         }
     </div>
-</div>
+}
+else
+{
+    <div class="alert alert-info text-center">
+        <i class="bi bi-info-circle-fill"></i> No products match your filter criteria.
+    </div>
+}
