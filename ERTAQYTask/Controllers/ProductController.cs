@@ -89,7 +89,7 @@ namespace PLProject.Controllers
 
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                 {
-                    return PartialView("_ProductList", filteredProducts);
+                    return PartialView("_FilterResults", filteredProducts);
                 }
 
                 await PopulateServiceProvidersDropdownAsync(filterViewModel.ServiceProviderId);
