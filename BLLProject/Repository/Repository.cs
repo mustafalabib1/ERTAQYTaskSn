@@ -110,7 +110,22 @@ namespace BLLProject.Repository
             return MapDataTableToList(dataTable);
         }
 
-        public abstract Task<int> CreateAsync(T entity);
+        public virtual async Task<int> CreateAsync(T entity)
+        {
+            var parameters = GetCreateParameters(entity);
+            var dataTable = await ExecuteStoredProcedureAsync($"sp_Create{_tableName}", parameters);
+            if (dataTable.Rows.Count > 0 && dataTable.Rows[0]["Id"] != DBNull.Value)
+            {
+                var id = Convert.ToInt32(dataTable.Rows[0]["Id"]);
+                // Set the entity's Id property
+                var idProperty = typeof(T).GetProperty("Id");
+                if (idProperty != null && idProperty.CanWrite)
+                {
+                    idProperty.SetValue(entity, id);
+                }
+            }
+            return 1;
+        }
         public abstract Task<int> UpdateAsync(T entity);
         public abstract Task<int> DeleteAsync(TId id);
     }

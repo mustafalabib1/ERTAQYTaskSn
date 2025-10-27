@@ -4,18 +4,59 @@
     ViewData["Title"] = "Service Providers";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Service Providers</h2>
-        <a asp-action="Create" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Add New Service Provider
+<div class="container fade-in">
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h1><i class="bi bi-building"></i> Service Providers</h1>
+            <p class="text-muted">Manage your service provider network</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary mt-3 mt-md-0">
+            <i class="bi bi-plus-circle"></i> Add New Provider
         </a>
     </div>
+
+    <!-- Search Bar -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="input-group search-box">
+                <span class="input-group-text bg-white">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" 
+                       class="form-control border-start-0" 
+                       id="searchInput" 
+                       placeholder="Search providers by name, email, or phone..."
+                       aria-label="Search service providers">
+                <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-lg-4 mt-3 mt-lg-0">
+            <select class="form-select" id="sortSelect" aria-label="Sort providers">
+                <option value="name-asc">Name (A-Z)</option>
+                <option value="name-desc">Name (Z-A)</option>
+                <option value="date-desc" selected>Newest First</option>
+                <option value="date-asc">Oldest First</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Results Count -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="results-info mb-3">
+            <span class="badge bg-light text-dark" id="resultsCount">
+                <i class="bi bi-check-circle-fill text-success"></i>
+                Showing <span id="visibleCount">@Model.Count()</span> of @Model.Count() providers
+            </span>
+        </div>
+    }
 
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["SuccessMessage"]
+            <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
@@ -23,47 +64,283 @@
     @if (TempData["ErrorMessage"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @TempData["ErrorMessage"]
+            <i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
     @if (Model != null && Model.Any())
     {
-        <div class="row">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="providersGrid">
             @foreach (var provider in Model)
             {
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">@provider.Name</h5>
-                            <p class="card-text"><i class="bi bi-envelope"></i> @provider.Email</p>
-                            <p class="card-text"><i class="bi bi-phone"></i> @(provider.Phone ?? "N/A")</p>
-                            <p class="card-text"><i class="bi bi-geo-alt"></i> @(provider.Address ?? "N/A")</p>
+                <div class="col provider-item" 
+                     data-name="@provider.Name.ToLower()" 
+                     data-email="@provider.Email.ToLower()"
+                     data-phone="@(provider.Phone?.ToLower() ?? "")"
+                     data-date="@provider.CreatedDate.Ticks">
+                    <article class="card h-100 provider-card" role="article" aria-label="Provider: @provider.Name">
+                        <div class="card-body d-flex flex-column">
+                            <div class="provider-header mb-3">
+                                <div class="provider-avatar">
+                                    <i class="bi bi-building-fill"></i>
+                                </div>
+                                <h5 class="card-title mt-2 mb-0">@provider.Name</h5>
+                            </div>
+                            
+                            <div class="provider-details mb-3 flex-grow-1">
+                                <div class="detail-row">
+                                    <i class="bi bi-envelope text-primary"></i>
+                                    <span class="text-truncate" title="@provider.Email">@provider.Email</span>
+                                </div>
+                                <div class="detail-row">
+                                    <i class="bi bi-phone text-success"></i>
+                                    <span>@(provider.Phone ?? "N/A")</span>
+                                </div>
+                                <div class="detail-row">
+                                    <i class="bi bi-geo-alt text-danger"></i>
+                                    <span class="text-truncate" title="@(provider.Address ?? "N/A")">
+                                        @(provider.Address ?? "N/A")
+                                    </span>
+                                </div>
+                                <div class="detail-row">
+                                    <i class="bi bi-calendar-check text-info"></i>
+                                    <span>@provider.CreatedDate.ToString("MMM dd, yyyy")</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-footer bg-transparent border-top-0">
-                            <small class="text-muted">Created: @provider.CreatedDate.ToString("yyyy-MM-dd")</small>
-                            <div class="btn-group float-end" role="group">
-                                <a asp-action="Details" asp-route-id="@provider.Id" class="btn btn-sm btn-info">
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a asp-action="Details" 
+                                   asp-route-id="@provider.Id" 
+                                   class="btn btn-sm btn-info"
+                                   title="View details"
+                                   aria-label="View details of @provider.Name">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a asp-action="Edit" asp-route-id="@provider.Id" class="btn btn-sm btn-warning">
+                                <a asp-action="Edit" 
+                                   asp-route-id="@provider.Id" 
+                                   class="btn btn-sm btn-warning"
+                                   title="Edit provider"
+                                   aria-label="Edit @provider.Name">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <a asp-action="Delete" asp-route-id="@provider.Id" class="btn btn-sm btn-danger">
+                                <a asp-action="Delete" 
+                                   asp-route-id="@provider.Id" 
+                                   class="btn btn-sm btn-danger"
+                                   title="Delete provider"
+                                   aria-label="Delete @provider.Name">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </div>
                         </div>
-                    </div>
+                    </article>
                 </div>
             }
+        </div>
+
+        <!-- No Results Message -->
+        <div id="noResults" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">
+                <i class="bi bi-search"></i>
+            </div>
+            <h3 class="empty-state-title">No Providers Found</h3>
+            <p class="empty-state-text">Try a different search term or clear your search.</p>
+            <button type="button" class="btn btn-outline-primary" id="clearSearchBtn">
+                <i class="bi bi-arrow-clockwise"></i> Clear Search
+            </button>
         </div>
     }
     else
     {
-        <div class="alert alert-info" role="alert">
-            No service providers found. Click "Add New Service Provider" to create one.
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-building"></i>
+            </div>
+            <h3 class="empty-state-title">No Service Providers Found</h3>
+            <p class="empty-state-text">Start by adding your first service provider.</p>
+            <a asp-action="Create" class="btn btn-primary btn-lg">
+                <i class="bi bi-plus-circle"></i> Add Your First Provider
+            </a>
         </div>
     }
 </div>
+
+<style>
+    .provider-card {
+        transition: all 0.3s ease;
+    }
+
+    .provider-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    }
+
+    .provider-header {
+        text-align: center;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .provider-avatar {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .provider-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .detail-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .detail-row i {
+        font-size: 1.1rem;
+        min-width: 20px;
+    }
+
+    .detail-row span {
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .search-box {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        // Auto-dismiss alerts
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                var bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+
+        // Search and sort functionality
+        const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        const clearSearchBtnBottom = document.getElementById('clearSearchBtn');
+        const sortSelect = document.getElementById('sortSelect');
+        const providersGrid = document.getElementById('providersGrid');
+        const noResults = document.getElementById('noResults');
+        const visibleCount = document.getElementById('visibleCount');
+
+        if (searchInput && providersGrid) {
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            function filterProviders() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                const providers = document.querySelectorAll('.provider-item');
+                let visibleProvidersCount = 0;
+
+                providers.forEach(provider => {
+                    const name = provider.dataset.name;
+                    const email = provider.dataset.email;
+                    const phone = provider.dataset.phone;
+                    const matches = name.includes(searchTerm) || 
+                                   email.includes(searchTerm) || 
+                                   phone.includes(searchTerm);
+                    
+                    if (matches) {
+                        provider.style.display = '';
+                        visibleProvidersCount++;
+                    } else {
+                        provider.style.display = 'none';
+                    }
+                });
+
+                if (visibleCount) {
+                    visibleCount.textContent = visibleProvidersCount;
+                }
+
+                if (noResults) {
+                    noResults.style.display = visibleProvidersCount === 0 && searchTerm ? 'block' : 'none';
+                }
+                if (providersGrid) {
+                    providersGrid.style.display = visibleProvidersCount === 0 && searchTerm ? 'none' : 'flex';
+                }
+            }
+
+            function sortProviders() {
+                const sortValue = sortSelect.value;
+                const providers = Array.from(document.querySelectorAll('.provider-item'));
+                
+                providers.sort((a, b) => {
+                    switch(sortValue) {
+                        case 'name-asc':
+                            return a.dataset.name.localeCompare(b.dataset.name);
+                        case 'name-desc':
+                            return b.dataset.name.localeCompare(a.dataset.name);
+                        case 'date-asc':
+                            return parseFloat(a.dataset.date) - parseFloat(b.dataset.date);
+                        case 'date-desc':
+                            return parseFloat(b.dataset.date) - parseFloat(a.dataset.date);
+                        default:
+                            return 0;
+                    }
+                });
+
+                providers.forEach(provider => {
+                    providersGrid.appendChild(provider);
+                });
+            }
+
+            searchInput.addEventListener('input', debounce(filterProviders, 300));
+            
+            if (sortSelect) {
+                sortSelect.addEventListener('change', sortProviders);
+            }
+
+            if (clearSearchBtn) {
+                clearSearchBtn.addEventListener('click', function() {
+                    searchInput.value = '';
+                    filterProviders();
+                    searchInput.focus();
+                });
+            }
+
+            if (clearSearchBtnBottom) {
+                clearSearchBtnBottom.addEventListener('click', function() {
+                    searchInput.value = '';
+                    filterProviders();
+                    searchInput.focus();
+                });
+            }
+
+            if (sortSelect) {
+                sortProviders();
+            }
+        }
+    </script>
+}

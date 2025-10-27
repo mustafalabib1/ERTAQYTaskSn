@@ -42,8 +42,11 @@ AS
 BEGIN
     INSERT INTO ServiceProviders (Name, Email, Phone, Address)
     VALUES (@Name, @Email, @Phone, @Address);
+
+    SELECT SCOPE_IDENTITY() AS Id;
 END
 GO
+
 
 -- 2. Read ServiceProvider by ID
 CREATE OR ALTER PROCEDURE sp_GetServiceProvidersById
@@ -95,7 +98,7 @@ GO
 -- Stored Procedures for Products Table (using CREATE OR ALTER)
 --------------------------------------------------
 
--- 1. Create Product
+-- 1. Create Product (updated to return ID)
 CREATE OR ALTER PROCEDURE sp_CreateProduct
     @Name NVARCHAR(100),
     @Price DECIMAL(18, 2),
@@ -105,7 +108,11 @@ AS
 BEGIN
     INSERT INTO Products (Name, Price, CreationDate, ServiceProviderId)
     VALUES (@Name, @Price, ISNULL(@CreationDate, CAST(GETDATE() AS DATE)), @ServiceProviderId);
+    
+    -- Return the generated ID
+    SELECT SCOPE_IDENTITY() AS Id;
 END
+GO
 GO
 
 -- 2. Read Product by ID sp_GetProductsById

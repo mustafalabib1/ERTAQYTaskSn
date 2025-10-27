@@ -10,17 +10,39 @@ namespace PLProject.Services.ServiceProviderService
     {
         public async Task<DetailServiceProviderViewModel> CreateServiceProviderAsync(CreateServiceProviderViewModel serviceProviderViewModel)
         {
-            // Check if email already exists
-            var emailExists = await _unitOfWork.ServiceProviders.EmailExistsAsync(serviceProviderViewModel.Email);
-            if (emailExists)
+            try
             {
-                throw new InvalidOperationException($"Email {serviceProviderViewModel.Email} already exists.");
-            }
+                // Check if email already exists
+                var existingProvider = await _unitOfWork.ServiceProviders.GetByEmailAsync(serviceProviderViewModel.Email);
+                if (existingProvider != null)
+                {
+                    throw new InvalidOperationException($"Service Provider with email '{serviceProviderViewModel.Email}' already exists.");
+                }
 
-            var serviceProvider = _mapper.Map<DALProject.Entities.ServiceProvider>(serviceProviderViewModel);
-            serviceProvider.CreatedDate = DateTime.Now;
-            await _unitOfWork.ServiceProviders.CreateAsync(serviceProvider);
-            return _mapper.Map<DetailServiceProviderViewModel>(serviceProvider);
+                var serviceProvider = _mapper.Map<DALProject.Entities.ServiceProvider>(serviceProviderViewModel);
+
+                // Create service provider and get the generated ID
+                var serviceProviderId = await _unitOfWork.ServiceProviders.CreateAsync(serviceProvider);
+
+                if (serviceProviderId <= 0)
+                {
+                    throw new InvalidOperationException("Failed to create service provider. No ID was returned.");
+                }
+
+                // Refetch to get complete data including CreatedDate
+                var createdServiceProvider = await _unitOfWork.ServiceProviders.GetByIdAsync(serviceProviderId);
+
+                if (createdServiceProvider == null)
+                {
+                    throw new InvalidOperationException("Service Provider was created but could not be retrieved.");
+                }
+
+                return _mapper.Map<DetailServiceProviderViewModel>(createdServiceProvider);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error creating service provider: {ex.Message}", ex);
+            }
         }
 
         public async Task DeleteServiceProviderAsync(int id)

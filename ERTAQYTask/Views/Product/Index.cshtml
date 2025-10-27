@@ -1,47 +1,292 @@
-﻿@model IEnumerable<GetAllProductViewModel>
+@model IEnumerable<GetAllProductViewModel>
 
 @{
     ViewData["Title"] = "Products";
 }
 
-<div class="container">
-    <h1>Products</h1>
+<div class="container fade-in">
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h1><i class="bi bi-box-seam"></i> Products</h1>
+            <p class="text-muted">Manage your product catalog</p>
+        </div>
+        <div class="d-flex gap-2 mt-3 mt-md-0">
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create New
+            </a>
+            <a asp-action="Filter" class="btn btn-outline-primary">
+                <i class="bi bi-funnel"></i> Filter
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Sort Bar -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="input-group search-box">
+                <span class="input-group-text bg-white">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" 
+                       class="form-control border-start-0" 
+                       id="searchInput" 
+                       placeholder="Search products by name or provider..."
+                       aria-label="Search products">
+                <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-lg-4 mt-3 mt-lg-0">
+            <select class="form-select" id="sortSelect" aria-label="Sort products">
+                <option value="name-asc">Name (A-Z)</option>
+                <option value="name-desc">Name (Z-A)</option>
+                <option value="price-asc">Price (Low to High)</option>
+                <option value="price-desc" selected>Price (High to Low)</option>
+                <option value="date-desc">Newest First</option>
+                <option value="date-asc">Oldest First</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Results Count -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="results-info mb-3">
+            <span class="badge bg-light text-dark" id="resultsCount">
+                <i class="bi bi-check-circle-fill text-success"></i>
+                Showing <span id="visibleCount">@Model.Count()</span> of @Model.Count() products
+            </span>
+        </div>
+    }
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     }
     @if (TempData["ErrorMessage"] != null)
     {
-        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     }
 
-    <p>
-        <a asp-action="Create" class="btn btn-primary">Create New</a>
-        <a asp-action="Filter" class="btn btn-outline-info">Filter Products</a>
-        <a asp-action="Search" class="btn btn-outline-secondary">Search by Price</a>
-    </p>
-
-    <div class="row">
-        @foreach (var item in Model)
-        {
-            <div class="col-md-4 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">@item.Name</h5>
-                        <p class="card-text"><strong>Price:</strong> @item.Price.ToString("C")</p>
-                        <p class="card-text"><strong>Provider:</strong> @(item.ServiceProviderName ?? "N/A")</p>
-                    </div>
-                    <div class="card-footer bg-transparent border-top-0">
-                        <small class="text-muted">Created: @item.CreationDate.ToString("yyyy-MM-dd")</small>
-                        <div class="btn-group float-end" role="group">
-                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
-                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
-                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
+    @if (Model != null && Model.Any())
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="productsGrid">
+            @foreach (var item in Model)
+            {
+                <div class="col product-item" 
+                     data-name="@item.Name.ToLower()" 
+                     data-provider="@(item.ServiceProviderName?.ToLower() ?? "")"
+                     data-price="@item.Price"
+                     data-date="@item.CreationDate.Ticks">
+                    <article class="card h-100 product-card" role="article" aria-label="Product: @item.Name">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-tag"></i> @item.Name
+                                </h5>
+                                <span class="badge bg-success">@item.Price.ToString("C")</span>
+                            </div>
+                            <div class="mb-3 flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-building text-primary"></i>
+                                    <strong class="ms-2">Provider:</strong>
+                                    <span class="ms-2 text-truncate">@(item.ServiceProviderName ?? "N/A")</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-calendar-check text-info"></i>
+                                    <strong class="ms-2">Created:</strong>
+                                    <span class="ms-2">@item.CreationDate.ToString("MMM dd, yyyy")</span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a asp-action="Details" 
+                                   asp-route-id="@item.Id" 
+                                   class="btn btn-sm btn-info"
+                                   title="View details"
+                                   aria-label="View details of @item.Name">
+                                    <i class="bi bi-eye"></i> <span class="d-none d-sm-inline">Details</span>
+                                </a>
+                                <a asp-action="Edit" 
+                                   asp-route-id="@item.Id" 
+                                   class="btn btn-sm btn-warning"
+                                   title="Edit product"
+                                   aria-label="Edit @item.Name">
+                                    <i class="bi bi-pencil"></i> <span class="d-none d-sm-inline">Edit</span>
+                                </a>
+                                <a asp-action="Delete" 
+                                   asp-route-id="@item.Id" 
+                                   class="btn btn-sm btn-danger"
+                                   title="Delete product"
+                                   aria-label="Delete @item.Name">
+                                    <i class="bi bi-trash"></i> <span class="d-none d-sm-inline">Delete</span>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
                 </div>
+            }
+        </div>
+
+        <!-- No Results Message (Hidden by default) -->
+        <div id="noResults" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">
+                <i class="bi bi-search"></i>
             </div>
-        }
-    </div>
+            <h3 class="empty-state-title">No Products Found</h3>
+            <p class="empty-state-text">Try a different search term or clear your search.</p>
+            <button type="button" class="btn btn-outline-primary" id="clearSearchBtn">
+                <i class="bi bi-arrow-clockwise"></i> Clear Search
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <h3 class="empty-state-title">No Products Found</h3>
+            <p class="empty-state-text">Start by creating your first product.</p>
+            <a asp-action="Create" class="btn btn-primary btn-lg">
+                <i class="bi bi-plus-circle"></i> Create Your First Product
+            </a>
+        </div>
+    }
 </div>
+
+@section Scripts {
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                var bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        const clearSearchBtnBottom = document.getElementById('clearSearchBtn');
+        const sortSelect = document.getElementById('sortSelect');
+        const productsGrid = document.getElementById('productsGrid');
+        const noResults = document.getElementById('noResults');
+        const visibleCount = document.getElementById('visibleCount');
+
+        if (searchInput && productsGrid) {
+            // Debounce function for better performance
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            // Filter products
+            function filterProducts() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                const products = document.querySelectorAll('.product-item');
+                let visibleProductsCount = 0;
+
+                products.forEach(product => {
+                    const name = product.dataset.name;
+                    const provider = product.dataset.provider;
+                    const matches = name.includes(searchTerm) || provider.includes(searchTerm);
+                    
+                    if (matches) {
+                        product.style.display = '';
+                        visibleProductsCount++;
+                    } else {
+                        product.style.display = 'none';
+                    }
+                });
+
+                // Update results count
+                if (visibleCount) {
+                    visibleCount.textContent = visibleProductsCount;
+                }
+
+                // Show/hide no results message
+                if (noResults) {
+                    noResults.style.display = visibleProductsCount === 0 && searchTerm ? 'block' : 'none';
+                }
+                if (productsGrid) {
+                    productsGrid.style.display = visibleProductsCount === 0 && searchTerm ? 'none' : 'flex';
+                }
+            }
+
+            // Sort products
+            function sortProducts() {
+                const sortValue = sortSelect.value;
+                const products = Array.from(document.querySelectorAll('.product-item'));
+                
+                products.sort((a, b) => {
+                    switch(sortValue) {
+                        case 'name-asc':
+                            return a.dataset.name.localeCompare(b.dataset.name);
+                        case 'name-desc':
+                            return b.dataset.name.localeCompare(a.dataset.name);
+                        case 'price-asc':
+                            return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+                        case 'price-desc':
+                            return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+                        case 'date-asc':
+                            return parseFloat(a.dataset.date) - parseFloat(b.dataset.date);
+                        case 'date-desc':
+                            return parseFloat(b.dataset.date) - parseFloat(a.dataset.date);
+                        default:
+                            return 0;
+                    }
+                });
+
+                // Reorder DOM elements
+                products.forEach(product => {
+                    productsGrid.appendChild(product);
+                });
+            }
+
+            // Event listeners
+            searchInput.addEventListener('input', debounce(filterProducts, 300));
+            
+            if (sortSelect) {
+                sortSelect.addEventListener('change', sortProducts);
+            }
+
+            if (clearSearchBtn) {
+                clearSearchBtn.addEventListener('click', function() {
+                    searchInput.value = '';
+                    filterProducts();
+                    searchInput.focus();
+                });
+            }
+
+            if (clearSearchBtnBottom) {
+                clearSearchBtnBottom.addEventListener('click', function() {
+                    searchInput.value = '';
+                    filterProducts();
+                    searchInput.focus();
+                });
+            }
+
+            // Initial sort
+            if (sortSelect) {
+                sortProducts();
+            }
+        }
+    </script>
+}

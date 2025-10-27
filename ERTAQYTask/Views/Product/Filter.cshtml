@@ -1,52 +1,185 @@
-﻿@model PLProject.ViewModel.ProductViewModel.FilterProductViewModel
+@model PLProject.ViewModel.ProductViewModel.FilterProductViewModel
 
 @{
     ViewData["Title"] = "Filter Products";
 }
 
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header">
-            <h2 class="mb-0"><i class="bi bi-funnel-fill"></i> Filter Products</h2>
-        </div>
-        <div class="card-body">
-            <form asp-action="Filter" method="post">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label asp-for="MinPrice" class="form-label">Minimum Price</label>
-                        <input asp-for="MinPrice" class="form-control" type="number" step="0.01" />
-                    </div>
-                    <div class="col-md-6">
-                        <label asp-for="MaxPrice" class="form-label">Maximum Price</label>
-                        <input asp-for="MaxPrice" class="form-control" type="number" step="0.01" />
-                    </div>
-                    <div class="col-md-6">
-                        <label asp-for="FromDate" class="form-label">From Date</label>
-                        <input asp-for="FromDate" class="form-control" type="date" />
-                    </div>
-                    <div class="col-md-6">
-                        <label asp-for="ToDate" class="form-label">To Date</label>
-                        <input asp-for="ToDate" class="form-control" type="date" />
-                    </div>
-                    <div class="col-md-12">
-                        <label asp-for="ServiceProviderId" class="form-label">Service Provider</label>
-                        <select asp-for="ServiceProviderId" class="form-select" asp-items="ViewBag.ServiceProviders">
-                            <option value="">-- All Providers --</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Apply Filter</button>
-                    <a asp-action="Index" class="btn btn-secondary">Back to Full List</a>
-                </div>
-            </form>
-        </div>
+<div class="container mt-4 fade-in">
+    <div class="page-header">
+        <h1>
+            <i class="bi bi-funnel-fill"></i> Filter Products
+        </h1>
+        <p class="text-muted">Search and filter products by various criteria</p>
     </div>
 
-    <div id="filterResults" class="mt-4">
-        @if (Model.Products != null)
-        {
-            <partial name="_ProductList" model="Model.Products" />
-        }
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-lg sticky-top" style="top: 20px;">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-sliders"></i> Filter Options
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Filter" method="post" id="filterForm">
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-cash-stack"></i> Price Range
+                            </label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input asp-for="MinPrice" 
+                                           class="form-control" 
+                                           type="number" 
+                                           step="0.01"
+                                           placeholder="Min"
+                                           aria-label="Minimum price" />
+                                    <small class="text-muted">Min</small>
+                                </div>
+                                <div class="col-6">
+                                    <input asp-for="MaxPrice" 
+                                           class="form-control" 
+                                           type="number" 
+                                           step="0.01"
+                                           placeholder="Max"
+                                           aria-label="Maximum price" />
+                                    <small class="text-muted">Max</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-calendar-range"></i> Date Range
+                            </label>
+                            <div class="mb-2">
+                                <label asp-for="FromDate" class="form-label small">From Date</label>
+                                <input asp-for="FromDate" 
+                                       class="form-control" 
+                                       type="date"
+                                       aria-label="From date" />
+                            </div>
+                            <div>
+                                <label asp-for="ToDate" class="form-label small">To Date</label>
+                                <input asp-for="ToDate" 
+                                       class="form-control" 
+                                       type="date"
+                                       aria-label="To date" />
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="ServiceProviderId" class="form-label">
+                                <i class="bi bi-building"></i> Service Provider
+                            </label>
+                            <select asp-for="ServiceProviderId" 
+                                    class="form-select" 
+                                    asp-items="ViewBag.ServiceProviders"
+                                    aria-label="Select service provider">
+                                <option value="">-- All Providers --</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary" id="applyFilterBtn">
+                                <i class="bi bi-search"></i> Apply Filters
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Clear All
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div id="filterResults">
+                @if (Model.Products != null && Model.Products.Any())
+                {
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-check-circle text-success"></i> 
+                            Found @Model.Products.Count() product(s)
+                        </h5>
+                    </div>
+                    <partial name="_ProductList" model="Model.Products" />
+                }
+                else if (Model.Products != null)
+                {
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="bi bi-search"></i>
+                        </div>
+                        <h3 class="empty-state-title">No Products Found</h3>
+                        <p class="empty-state-text">
+                            Try adjusting your filter criteria to find what you're looking for.
+                        </p>
+                        <a asp-action="Index" class="btn btn-outline-primary">
+                            <i class="bi bi-arrow-left"></i> View All Products
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="card shadow-sm">
+                        <div class="card-body text-center py-5">
+                            <i class="bi bi-funnel display-1 text-muted mb-3"></i>
+                            <h4 class="text-muted">Apply filters to search products</h4>
+                            <p class="text-muted">Use the filter options on the left to narrow down your search.</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Add loading state to filter button
+        document.getElementById('filterForm').addEventListener('submit', function() {
+            var btn = document.getElementById('applyFilterBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Filtering...';
+        });
+
+        // Real-time validation for price range
+        var minPrice = document.querySelector('input[name="MinPrice"]');
+        var maxPrice = document.querySelector('input[name="MaxPrice"]');
+
+        function validatePriceRange() {
+            if (minPrice.value && maxPrice.value) {
+                if (parseFloat(minPrice.value) > parseFloat(maxPrice.value)) {
+                    maxPrice.setCustomValidity('Maximum price must be greater than minimum price');
+                } else {
+                    maxPrice.setCustomValidity('');
+                }
+            }
+        }
+
+        if (minPrice && maxPrice) {
+            minPrice.addEventListener('input', validatePriceRange);
+            maxPrice.addEventListener('input', validatePriceRange);
+        }
+
+        // Real-time validation for date range
+        var fromDate = document.querySelector('input[name="FromDate"]');
+        var toDate = document.querySelector('input[name="ToDate"]');
+
+        function validateDateRange() {
+            if (fromDate.value && toDate.value) {
+                if (new Date(fromDate.value) > new Date(toDate.value)) {
+                    toDate.setCustomValidity('To date must be after from date');
+                } else {
+                    toDate.setCustomValidity('');
+                }
+            }
+        }
+
+        if (fromDate && toDate) {
+            fromDate.addEventListener('change', validateDateRange);
+            toDate.addEventListener('change', validateDateRange);
+        }
+    </script>
+}

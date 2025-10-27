@@ -37,8 +37,24 @@ namespace BLLProject.Repository
 
         public override async Task<int> CreateAsync(ServiceProvider entity)
         {
-            return await ExecuteNonQueryStoredProcedureAsync("sp_CreateServiceProvider",
-                GetCreateParameters(entity));
+            try
+            {
+                var dataTable = await ExecuteStoredProcedureAsync("sp_CreateServiceProvider",
+                    GetCreateParameters(entity));
+
+                if (dataTable.Rows.Count > 0 && dataTable.Rows[0]["Id"] != DBNull.Value)
+                {
+                    var generatedId = Convert.ToInt32(dataTable.Rows[0]["Id"]);
+                    entity.Id = generatedId;
+                    return generatedId;
+                }
+
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Error creating service provider and retrieving ID", ex);
+            }
         }
 
         public override async Task<int> UpdateAsync(ServiceProvider entity)
