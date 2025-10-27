@@ -1,6 +1,7 @@
 using AutoMapper;
 using BLLProject.UnitOfWorkPattern;
 using DALProject.Entities;
+using PLProject.ViewModel.ProductViewModel;
 using PLProject.ViewModel.ServiceProviderViewModel;
 
 namespace PLProject.Services.ServiceProviderService
@@ -44,7 +45,14 @@ namespace PLProject.Services.ServiceProviderService
             {
                 return null;
             }
-            return _mapper.Map<DetailServiceProviderViewModel>(serviceProvider);
+
+            var serviceProviderViewModel = _mapper.Map<DetailServiceProviderViewModel>(serviceProvider);
+
+            // Fetch associated products
+            var products = await _unitOfWork.Products.GetByServiceProviderIdAsync(id);
+            serviceProviderViewModel.Products = _mapper.Map<IEnumerable<GetAllProductViewModel>>(products);
+
+            return serviceProviderViewModel;
         }
 
         public async Task UpdateServiceProviderAsync(DetailServiceProviderViewModel serviceProviderViewModel)

@@ -1,3 +1,4 @@
+using PLProject.ViewModel.ProductViewModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace PLProject.ViewModel.ServiceProviderViewModel
@@ -21,5 +22,6 @@ namespace PLProject.ViewModel.ServiceProviderViewModel
 
         [Display(Name = "Created Date")]
         public DateTime CreatedDate { get; set; }
+        public IEnumerable<GetAllProductViewModel> Products{ get; set; } = new List<GetAllProductViewModel>();
     }
 }

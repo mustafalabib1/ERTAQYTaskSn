@@ -46,7 +46,7 @@ END
 GO
 
 -- 2. Read ServiceProvider by ID
-CREATE OR ALTER PROCEDURE sp_GetServiceProviderById
+CREATE OR ALTER PROCEDURE sp_GetServiceProvidersById
     @Id INT
 AS
 BEGIN

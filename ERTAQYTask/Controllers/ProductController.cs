@@ -56,10 +56,7 @@ namespace PLProject.Controllers
             try
             {
                 var filterViewModel = new FilterProductViewModel();
-                
-                // Load all service providers for the dropdown
-                var serviceProviders = await _serviceProviderService.GetAllServiceProvidersAsync();
-                ViewBag.ServiceProviders = new SelectList(serviceProviders, "Id", "Name");
+                await PopulateServiceProvidersDropdownAsync();
                 
                 return View(filterViewModel);
             }
@@ -72,20 +69,16 @@ namespace PLProject.Controllers
 
         // POST: Product/Filter
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Filter(FilterProductViewModel filterViewModel)
         {
             try
             {
                 if (!ModelState.IsValid)
                 {
-                    // Reload service providers for the dropdown
-                    var serviceProviders = await _serviceProviderService.GetAllServiceProvidersAsync();
-                    ViewBag.ServiceProviders = new SelectList(serviceProviders, "Id", "Name");
+                    await PopulateServiceProvidersDropdownAsync(filterViewModel.ServiceProviderId);
                     return View(filterViewModel);
                 }
 
-                // Apply filters
                 var filteredProducts = await _productService.GetFilteredProductsAsync(
                     filterViewModel.MinPrice,
                     filterViewModel.MaxPrice,
@@ -94,23 +87,19 @@ namespace PLProject.Controllers
                     filterViewModel.ServiceProviderId
                 );
 
-                // Load all service providers for the dropdown
-                var allServiceProviders = await _serviceProviderService.GetAllServiceProvidersAsync();
-                ViewBag.ServiceProviders = new SelectList(allServiceProviders, "Id", "Name");
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return PartialView("_ProductList", filteredProducts);
+                }
 
+                await PopulateServiceProvidersDropdownAsync(filterViewModel.ServiceProviderId);
                 filterViewModel.Products = filteredProducts.ToList();
-                filterViewModel.ServiceProviders = allServiceProviders.ToList();
-
                 return View(filterViewModel);
             }
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = $"Error filtering products: {ex.Message}";
-                
-                // Reload service providers for the dropdown
-                var serviceProviders = await _serviceProviderService.GetAllServiceProvidersAsync();
-                ViewBag.ServiceProviders = new SelectList(serviceProviders, "Id", "Name");
-                
+                await PopulateServiceProvidersDropdownAsync(filterViewModel.ServiceProviderId);
                 return View(filterViewModel);
             }
         }
@@ -120,9 +109,7 @@ namespace PLProject.Controllers
         {
             try
             {
-                // Load service providers for the dropdown
-                var serviceProviders = await _serviceProviderService.GetAllServiceProvidersAsync();
-                ViewBag.ServiceProviders = new SelectList(serviceProviders, "Id", "Name");
+                await PopulateServiceProvidersDropdownAsync();
                 
                 return View();
             }
@@ -148,20 +135,13 @@ namespace PLProject.Controllers
                 }
 
                 // If we got this far, something failed; redisplay form
-                // Reload service providers for the dropdown
-                var serviceProviders = await _serviceProviderService.GetAllServiceProvidersAsync();
-                ViewBag.ServiceProviders = new SelectList(serviceProviders, "Id", "Name");
-                
+                await PopulateServiceProvidersDropdownAsync(productViewModel.ServiceProviderId);
                 return View(productViewModel);
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError("", $"Error creating product: {ex.Message}");
-                
-                // Reload service providers for the dropdown
-                var serviceProviders = await _serviceProviderService.GetAllServiceProvidersAsync();
-                ViewBag.ServiceProviders = new SelectList(serviceProviders, "Id", "Name");
-                
+                await PopulateServiceProvidersDropdownAsync(productViewModel.ServiceProviderId);
                 return View(productViewModel);
             }
         }
@@ -177,6 +157,8 @@ namespace PLProject.Controllers
                     TempData["ErrorMessage"] = "Product not found.";
                     return RedirectToAction(nameof(Index));
                 }
+
+                await PopulateServiceProvidersDropdownAsync(product.ServiceProviderId);
                 return View(product);
             }
             catch (Exception ex)
@@ -206,16 +188,13 @@ namespace PLProject.Controllers
                     return RedirectToAction(nameof(Details), new { id = productViewModel.Id });
                 }
 
-                var serviceProviders = await _serviceProviderService.GetAllServiceProvidersAsync();
-                ViewBag.ServiceProviders = new SelectList(serviceProviders, "Id", "Name", productViewModel.ServiceProviderId);
-
+                await PopulateServiceProvidersDropdownAsync(productViewModel.ServiceProviderId);
                 return View(productViewModel);
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError("", $"Error updating product: {ex.Message}");
-                var serviceProviders = await _serviceProviderService.GetAllServiceProvidersAsync();
-                ViewBag.ServiceProviders = new SelectList(serviceProviders, "Id", "Name", productViewModel.ServiceProviderId);
+                await PopulateServiceProvidersDropdownAsync(productViewModel.ServiceProviderId);
                 return View(productViewModel);
             }
         }
@@ -256,6 +235,12 @@ namespace PLProject.Controllers
                 TempData["ErrorMessage"] = $"Error deleting product: {ex.Message}";
                 return RedirectToAction(nameof(Delete), new { id });
             }
+        }
+
+        private async Task PopulateServiceProvidersDropdownAsync(object selectedProvider = null)
+        {
+            var serviceProviders = await _serviceProviderService.GetAllServiceProvidersAsync();
+            ViewBag.ServiceProviders = new SelectList(serviceProviders, "Id", "Name", selectedProvider);
         }
     }
 }

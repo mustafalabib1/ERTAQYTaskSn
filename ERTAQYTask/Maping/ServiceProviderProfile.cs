@@ -11,6 +11,7 @@ namespace PLProject.Maping
             CreateMap<DALProject.Entities.ServiceProvider, GetAllServiceProviderViewModel>();
             CreateMap<DALProject.Entities.ServiceProvider, DetailServiceProviderViewModel>();
             CreateMap<CreateServiceProviderViewModel, DALProject.Entities.ServiceProvider>();
+            CreateMap<DetailServiceProviderViewModel, DALProject.Entities.ServiceProvider>();
         }
     }
 }
